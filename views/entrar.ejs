@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosechero — Entrar</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bienvenida-body">
+  <main class="bienvenida">
+    <div class="bienvenida-blob"></div>
+
+    <div class="bienvenida-logo">
+      <svg width="72" height="72" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="15" fill="#FFBA08"/>
+        <path d="M9 20C9 13 14 9 21 9C21 16 17 21 10 21C9.5 21 9 20.5 9 20Z" fill="#2D6A4F"/>
+        <path d="M9 20L18 11" stroke="#FFF8EC" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <p class="rol-badge"><%= rol === 'productor' ? 'Productor' : 'Comprador' %></p>
+    <h1 class="entrar-titulo">¿Cuál es tu número de WhatsApp?</h1>
+    <p class="mensaje">Así te reconocemos la próxima vez. Sin contraseña, sin código.</p>
+
+    <% if (error) { %>
+      <div class="error" style="margin-bottom: 16px; position: relative; z-index: 1;"><%= error %></div>
+    <% } %>
+
+    <form action="/entrar" method="POST" class="form-entrar">
+      <input type="hidden" name="rol" value="<%= rol %>">
+      <input type="tel" name="telefono" placeholder="0414-1234567" value="<%= telefono %>" required autofocus>
+      <button type="submit" class="btn-entrar">Continuar</button>
+    </form>
+
+    <a href="/" class="link-publicar">← Volver</a>
+  </main>
+</body>
+</html>

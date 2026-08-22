@@ -377,3 +377,68 @@ input[type="file"] {
 .link-publicar:hover {
   text-decoration: underline;
 }
+
+.btn-secundario {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  background: transparent;
+  color: var(--naranja);
+  border: 2px solid var(--naranja);
+  text-decoration: none;
+  padding: 14px 30px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.btn-secundario:active {
+  opacity: 0.85;
+}
+
+.rol-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  background: var(--amarillo);
+  color: var(--texto);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.entrar-titulo {
+  position: relative;
+  z-index: 1;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--texto);
+  margin: 0 0 10px;
+}
+
+.form-entrar {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-entrar input[type="tel"] {
+  text-align: center;
+  font-size: 18px;
+}
+
+.form-entrar .btn-entrar {
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 0;
+}

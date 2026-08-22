@@ -1,12 +1,16 @@
 const express = require('express');
 const multer = require('multer');
+const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'publicaciones.json');
+const USERS_FILE = path.join(__dirname, 'data', 'usuarios.json');
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const COOKIE_SECRET = process.env.COOKIE_SECRET || 'cosechero-dev-secret';
+const COOKIE_NOMBRE = 'cosechero_usuario';
 
 // V0: un solo mercado. Cada registro igual guarda mercado_id para poder
 // activar mercados nuevos despues sin tocar el modelo de datos.
@@ -20,6 +24,13 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser(COOKIE_SECRET));
+
+app.use((req, res, next) => {
+  const usuarioId = req.signedCookies[COOKIE_NOMBRE];
+  req.usuario = usuarioId ? leerUsuarios().find((u) => u.id === usuarioId) || null : null;
+  next();
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
@@ -50,6 +61,48 @@ function guardarPublicaciones(lista) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(lista, null, 2));
 }
 
+function leerUsuarios() {
+  try {
+    const raw = fs.readFileSync(USERS_FILE, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function guardarUsuarios(lista) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(lista, null, 2));
+}
+
+function soloDigitos(telefono) {
+  return String(telefono).replace(/\D/g, '');
+}
+
+function encontrarOCrearUsuario(telefono, rol) {
+  const digitos = soloDigitos(telefono);
+  const usuarios = leerUsuarios();
+  const existente = usuarios.find(
+    (u) => soloDigitos(u.telefono) === digitos && u.mercado_id === MERCADO_ID
+  );
+
+  if (existente) {
+    existente.rol = rol;
+    guardarUsuarios(usuarios);
+    return existente;
+  }
+
+  const nuevo = {
+    id: crypto.randomUUID(),
+    mercado_id: MERCADO_ID,
+    telefono: telefono.trim(),
+    rol,
+    creado_en: new Date().toISOString(),
+  };
+  usuarios.push(nuevo);
+  guardarUsuarios(usuarios);
+  return nuevo;
+}
+
 function esDeHoy(fechaISO) {
   const fecha = new Date(fechaISO);
   const hoy = new Date();
@@ -77,6 +130,38 @@ app.get('/', (req, res) => {
   res.render('bienvenida', { mercadoNombre: MERCADO_NOMBRE });
 });
 
+app.get('/entrar', (req, res) => {
+  const rol = req.query.rol;
+  if (rol !== 'comprador' && rol !== 'productor') {
+    return res.redirect('/');
+  }
+  res.render('entrar', {
+    rol,
+    telefono: req.usuario ? req.usuario.telefono : '',
+    error: null,
+  });
+});
+
+app.post('/entrar', (req, res) => {
+  const { rol, telefono } = req.body;
+  if (rol !== 'comprador' && rol !== 'productor') {
+    return res.redirect('/');
+  }
+  if (!telefono || !telefono.trim()) {
+    return res.status(400).render('entrar', { rol, telefono: '', error: 'Falta tu número.' });
+  }
+
+  const usuario = encontrarOCrearUsuario(telefono, rol);
+  res.cookie(COOKIE_NOMBRE, usuario.id, {
+    signed: true,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+  });
+
+  res.redirect(rol === 'productor' ? '/publicar' : '/hoy');
+});
+
 app.get('/hoy', (req, res) => {
   const todas = leerPublicaciones().filter((p) => p.mercado_id === MERCADO_ID);
   const deHoy = todas
@@ -97,7 +182,10 @@ app.get('/hoy', (req, res) => {
 });
 
 app.get('/publicar', (req, res) => {
-  res.render('publicar', { error: null, valores: {} });
+  res.render('publicar', {
+    error: null,
+    valores: { telefono: req.usuario ? req.usuario.telefono : '' },
+  });
 });
 
 app.post('/publicar', (req, res, next) => {
@@ -126,7 +214,7 @@ app.post('/publicar', (req, res, next) => {
     const nueva = {
       id: crypto.randomUUID(),
       mercado_id: MERCADO_ID,
-      productor_id: null,
+      productor_id: req.usuario ? req.usuario.id : null,
       producto: producto.trim(),
       rubro: null,
       cantidad: cantidad.trim(),
