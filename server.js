@@ -297,6 +297,21 @@ app.post('/publicar', (req, res, next) => {
   });
 });
 
+app.get('/salud', (req, res) => {
+  res.status(200).send('ok');
+});
+
 app.listen(PORT, () => {
   console.log(`Cosechero corriendo en http://localhost:${PORT}`);
 });
+
+// En Render (plan gratis) el servicio se duerme a los 15 min sin trafico
+// entrante, y al despertar pierde los datos guardados en archivo. Esto lo
+// mantiene despierto haciendose un ping a si mismo antes de ese limite.
+// No sustituye un disco persistente, pero evita el caso mas comun de perdida
+// de datos (inactividad de un rato) sin costo.
+if (process.env.RENDER_EXTERNAL_URL) {
+  setInterval(() => {
+    fetch(`${process.env.RENDER_EXTERNAL_URL}/salud`).catch(() => {});
+  }, 10 * 60 * 1000);
+}
