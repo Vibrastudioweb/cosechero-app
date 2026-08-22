@@ -1,14 +1,17 @@
 # Cosechero — versión 0
 
-Dos pantallas para mostrar en Makroval:
+Pantallas:
 
-1. **Qué llegó hoy** (`/`) — lista pública de lo publicado hoy, con botón para
+1. **Bienvenida** (`/`) — elegir rol (comprador/productor).
+2. **Entrar** (`/entrar`) — solo el número de WhatsApp, sin código ni contraseña.
+3. **Qué llegó hoy** (`/hoy`) — lista pública de lo publicado hoy, con botón para
    contactar por WhatsApp.
-2. **Publicar** (`/publicar`) — formulario corto, sin cuenta, para que un
-   productor suba lo que tiene.
+4. **Publicar** (`/publicar`) — formulario corto para que un productor suba lo
+   que tiene, incluyendo dónde está (por ahora, Trujillo o Mérida).
 
-Sin base de datos: las publicaciones se guardan en [`data/publicaciones.json`](data/publicaciones.json).
-Las fotos (opcionales) se guardan en `public/uploads/`.
+Sin base de datos: las publicaciones se guardan en [`data/publicaciones.json`](data/publicaciones.json)
+y los usuarios en [`data/usuarios.json`](data/usuarios.json).
+Las fotos (opcionales) se guardan en `data/uploads/`.
 
 ## Cómo correrlo
 

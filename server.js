@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'publicaciones.json');
 const USERS_FILE = path.join(__dirname, 'data', 'usuarios.json');
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const UPLOADS_DIR = path.join(__dirname, 'data', 'uploads');
 const COOKIE_SECRET = process.env.COOKIE_SECRET || 'cosechero-dev-secret';
 const COOKIE_NOMBRE = 'cosechero_usuario';
 
@@ -25,6 +25,7 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(COOKIE_SECRET));
 
