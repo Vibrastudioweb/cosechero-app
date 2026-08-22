@@ -22,8 +22,6 @@
   </header>
 
   <main>
-    <p class="mercado">📍 <%= mercadoNombre %></p>
-
     <nav class="nav-tabs">
       <a href="/hoy" class="activo">Qué llegó hoy</a>
       <a href="/publicar">Publicar</a>
@@ -44,11 +42,14 @@
           <% if (p.foto) { %>
             <img class="foto" src="<%= p.foto %>" alt="<%= p.producto %>">
           <% } else { %>
-            <div class="foto-placeholder">🥬</div>
+            <div class="foto-placeholder"><%= p.icono %></div>
           <% } %>
           <div class="info">
             <p class="producto"><%= p.producto %></p>
             <p class="cantidad"><%= p.cantidad %> · <%= p.presentacion %></p>
+            <% if (p.ubicacion) { %>
+              <p class="ubicacion">📍 <%= p.ubicacion.ciudad %>, <%= p.ubicacion.estado %></p>
+            <% } %>
             <p class="precio"><%= p.precio === 'consultar' ? 'Consultar precio' : ('Bs ' + p.precio) %></p>
             <a class="btn-whatsapp" href="<%= p.whatsappHref %>" target="_blank" rel="noopener">
               💬 Contactar

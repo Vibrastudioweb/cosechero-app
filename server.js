@@ -12,10 +12,12 @@ const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
 const COOKIE_SECRET = process.env.COOKIE_SECRET || 'cosechero-dev-secret';
 const COOKIE_NOMBRE = 'cosechero_usuario';
 
-// V0: un solo mercado. Cada registro igual guarda mercado_id para poder
-// activar mercados nuevos despues sin tocar el modelo de datos.
+// V0: un solo mercado/tenant interno. Cada registro igual guarda mercado_id
+// para poder activar mercados nuevos despues sin tocar el modelo de datos.
+// La ubicacion real de cada publicacion ya no depende de esto: cada
+// productor dice donde esta (por ahora, limitado a estos estados).
 const MERCADO_ID = 'makroval';
-const MERCADO_NOMBRE = 'Makroval, Valera';
+const ESTADOS_DISPONIBLES = ['Trujillo', 'Mérida'];
 
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
@@ -113,6 +115,55 @@ function esDeHoy(fechaISO) {
   );
 }
 
+// Icono por producto cuando no hay foto. La lista es de reglas ordenadas: la
+// primera palabra clave que aparezca en el nombre del producto gana.
+const ICONOS_PRODUCTO = [
+  { palabras: ['tomate'], icono: '🍅' },
+  { palabras: ['papa', 'patata'], icono: '🥔' },
+  { palabras: ['cebolla'], icono: '🧅' },
+  { palabras: ['zanahoria'], icono: '🥕' },
+  { palabras: ['maiz', 'elote', 'choclo', 'jojoto'], icono: '🌽' },
+  { palabras: ['platano', 'cambur', 'banana'], icono: '🍌' },
+  { palabras: ['lechuga', 'repollo', 'col', 'espinaca'], icono: '🥬' },
+  { palabras: ['pimenton', 'pimiento', 'aji'], icono: '🫑' },
+  { palabras: ['ajo'], icono: '🧄' },
+  { palabras: ['limon'], icono: '🍋' },
+  { palabras: ['naranja', 'mandarina'], icono: '🍊' },
+  { palabras: ['manzana'], icono: '🍎' },
+  { palabras: ['pera'], icono: '🍐' },
+  { palabras: ['uva'], icono: '🍇' },
+  { palabras: ['sandia', 'patilla'], icono: '🍉' },
+  { palabras: ['melon'], icono: '🍈' },
+  { palabras: ['pina', 'ananas'], icono: '🍍' },
+  { palabras: ['mango'], icono: '🥭' },
+  { palabras: ['fresa', 'frutilla'], icono: '🍓' },
+  { palabras: ['aguacate', 'palta'], icono: '🥑' },
+  { palabras: ['pepino'], icono: '🥒' },
+  { palabras: ['auyama', 'calabaza', 'zapallo'], icono: '🎃' },
+  { palabras: ['brocoli', 'coliflor'], icono: '🥦' },
+  { palabras: ['caraota', 'frijol', 'frijoles', 'poroto', 'habichuela'], icono: '🫘' },
+  { palabras: ['arveja', 'guisante'], icono: '🫛' },
+  { palabras: ['yuca', 'mandioca'], icono: '🍠' },
+  { palabras: ['coco'], icono: '🥥' },
+  { palabras: ['huevo'], icono: '🥚' },
+  { palabras: ['pollo'], icono: '🍗' },
+  { palabras: ['carne', 'res'], icono: '🥩' },
+  { palabras: ['pescado'], icono: '🐟' },
+  { palabras: ['berenjena'], icono: '🍆' },
+  { palabras: ['cilantro', 'perejil', 'albahaca'], icono: '🌿' },
+];
+const ICONO_PRODUCTO_DEFAULT = '🧺';
+
+function iconoParaProducto(producto) {
+  const texto = String(producto)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const regla = ICONOS_PRODUCTO.find((r) => r.palabras.some((palabra) => texto.includes(palabra)));
+  return regla ? regla.icono : ICONO_PRODUCTO_DEFAULT;
+}
+
 // Numero venezolano -> formato que entiende wa.me (codigo de pais 58, sin el 0 inicial)
 function normalizarTelefonoWhatsapp(telefono) {
   let digitos = String(telefono).replace(/\D/g, '');
@@ -127,7 +178,7 @@ function normalizarTelefonoWhatsapp(telefono) {
 }
 
 app.get('/', (req, res) => {
-  res.render('bienvenida', { mercadoNombre: MERCADO_NOMBRE });
+  res.render('bienvenida');
 });
 
 app.get('/entrar', (req, res) => {
@@ -169,13 +220,13 @@ app.get('/hoy', (req, res) => {
     .sort((a, b) => new Date(b.fecha_publicacion) - new Date(a.fecha_publicacion))
     .map((p) => ({
       ...p,
+      icono: iconoParaProducto(p.producto),
       whatsappHref: `https://wa.me/${normalizarTelefonoWhatsapp(p.telefono)}?text=${encodeURIComponent(
         `Hola! Vi tu publicacion de ${p.producto} en Cosechero, ¿todavia esta disponible?`
       )}`,
     }));
 
   res.render('index', {
-    mercadoNombre: MERCADO_NOMBRE,
     publicaciones: deHoy,
     ok: req.query.ok === '1',
   });
@@ -184,6 +235,7 @@ app.get('/hoy', (req, res) => {
 app.get('/publicar', (req, res) => {
   res.render('publicar', {
     error: null,
+    estados: ESTADOS_DISPONIBLES,
     valores: { telefono: req.usuario ? req.usuario.telefono : '' },
   });
 });
@@ -191,14 +243,23 @@ app.get('/publicar', (req, res) => {
 app.post('/publicar', (req, res, next) => {
   upload.single('foto')(req, res, (err) => {
     if (err) {
-      return res.status(400).render('publicar', { error: err.message, valores: req.body });
+      return res.status(400).render('publicar', { error: err.message, estados: ESTADOS_DISPONIBLES, valores: req.body });
     }
 
-    const { producto, cantidad, presentacion, tipoPrecio, precio, telefono } = req.body;
+    const { producto, cantidad, presentacion, tipoPrecio, precio, telefono, estadoUbicacion, ciudad } = req.body;
 
-    if (!producto || !cantidad || !presentacion || !telefono) {
+    if (!producto || !cantidad || !presentacion || !telefono || !estadoUbicacion || !ciudad) {
       return res.status(400).render('publicar', {
-        error: 'Falta llenar producto, cantidad, presentacion o telefono.',
+        error: 'Falta llenar producto, cantidad, presentacion, ubicacion o telefono.',
+        estados: ESTADOS_DISPONIBLES,
+        valores: req.body,
+      });
+    }
+
+    if (!ESTADOS_DISPONIBLES.includes(estadoUbicacion)) {
+      return res.status(400).render('publicar', {
+        error: 'Por ahora solo cubrimos Trujillo y Mérida.',
+        estados: ESTADOS_DISPONIBLES,
         valores: req.body,
       });
     }
@@ -207,6 +268,7 @@ app.post('/publicar', (req, res, next) => {
     if (!precioFinal) {
       return res.status(400).render('publicar', {
         error: 'Pon un precio o marca "Consultar precio".',
+        estados: ESTADOS_DISPONIBLES,
         valores: req.body,
       });
     }
@@ -222,6 +284,7 @@ app.post('/publicar', (req, res, next) => {
       precio: precioFinal,
       foto: req.file ? `/uploads/${req.file.filename}` : null,
       telefono: telefono.trim(),
+      ubicacion: { estado: estadoUbicacion, ciudad: ciudad.trim() },
       fecha_publicacion: new Date().toISOString(),
       estado: 'activo',
     };

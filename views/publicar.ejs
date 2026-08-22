@@ -48,6 +48,22 @@
         </div>
       </div>
 
+      <div class="fila">
+        <div>
+          <label for="estadoUbicacion">Estado</label>
+          <select id="estadoUbicacion" name="estadoUbicacion" required>
+            <option value="" disabled <%= !valores.estadoUbicacion ? 'selected' : '' %>>Elige uno</option>
+            <% estados.forEach(function(e) { %>
+              <option value="<%= e %>" <%= valores.estadoUbicacion === e ? 'selected' : '' %>><%= e %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label for="ciudad">Ciudad o lugar</label>
+          <input type="text" id="ciudad" name="ciudad" placeholder="Ej: Valera" value="<%= valores.ciudad || '' %>" required>
+        </div>
+      </div>
+
       <div>
         <label>Precio</label>
         <div class="precio-opciones">
