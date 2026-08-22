@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosechero — Publicar</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="15" fill="#FFBA08"/>
+        <path d="M9 20C9 13 14 9 21 9C21 16 17 21 10 21C9.5 21 9 20.5 9 20Z" fill="#2D6A4F"/>
+        <path d="M9 20L18 11" stroke="#FFF8EC" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>Cosechero</h1>
+        <p class="tagline">Comercio mayorista</p>
+      </div>
+    </a>
+  </header>
+
+  <main>
+    <nav class="nav-tabs">
+      <a href="/">Qué llegó hoy</a>
+      <a href="/publicar" class="activo">Publicar</a>
+    </nav>
+
+    <% if (error) { %>
+      <div class="error"><%= error %></div>
+    <% } %>
+
+    <form action="/publicar" method="POST" enctype="multipart/form-data">
+      <div>
+        <label for="producto">Producto</label>
+        <input type="text" id="producto" name="producto" placeholder="Ej: Tomate" value="<%= valores.producto || '' %>" required>
+      </div>
+
+      <div class="fila">
+        <div>
+          <label for="cantidad">Cantidad</label>
+          <input type="text" id="cantidad" name="cantidad" placeholder="Ej: 20" value="<%= valores.cantidad || '' %>" required>
+        </div>
+        <div>
+          <label for="presentacion">Presentación</label>
+          <input type="text" id="presentacion" name="presentacion" placeholder="Ej: sacos de 50kg" value="<%= valores.presentacion || '' %>" required>
+        </div>
+      </div>
+
+      <div>
+        <label>Precio</label>
+        <div class="precio-opciones">
+          <label><input type="radio" name="tipoPrecio" value="numero" id="precioNumero" checked> Poner precio</label>
+          <label><input type="radio" name="tipoPrecio" value="consultar" id="precioConsultar"> Consultar</label>
+        </div>
+        <input type="text" id="precio" name="precio" placeholder="Ej: 15000 Bs / saco" value="<%= valores.precio || '' %>">
+      </div>
+
+      <div>
+        <label for="telefono">Tu teléfono (WhatsApp)</label>
+        <input type="tel" id="telefono" name="telefono" placeholder="0414-1234567" value="<%= valores.telefono || '' %>" required>
+      </div>
+
+      <div>
+        <label for="foto">Foto (opcional)</label>
+        <input type="file" id="foto" name="foto" accept="image/*" capture="environment">
+      </div>
+
+      <button type="submit" class="btn-publicar">Publicar</button>
+    </form>
+  </main>
+
+  <script>
+    const precioInput = document.getElementById('precio');
+    const numero = document.getElementById('precioNumero');
+    const consultar = document.getElementById('precioConsultar');
+
+    function actualizarPrecio() {
+      if (consultar.checked) {
+        precioInput.disabled = true;
+        precioInput.value = '';
+        precioInput.placeholder = 'Se mostrará "Consultar precio"';
+      } else {
+        precioInput.disabled = false;
+        precioInput.placeholder = 'Ej: 15000 Bs / saco';
+      }
+    }
+    numero.addEventListener('change', actualizarPrecio);
+    consultar.addEventListener('change', actualizarPrecio);
+    actualizarPrecio();
+  </script>
+</body>
+</html>
