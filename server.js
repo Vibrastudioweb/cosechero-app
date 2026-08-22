@@ -74,6 +74,10 @@ function normalizarTelefonoWhatsapp(telefono) {
 }
 
 app.get('/', (req, res) => {
+  res.render('bienvenida', { mercadoNombre: MERCADO_NOMBRE });
+});
+
+app.get('/hoy', (req, res) => {
   const todas = leerPublicaciones().filter((p) => p.mercado_id === MERCADO_ID);
   const deHoy = todas
     .filter((p) => esDeHoy(p.fecha_publicacion))
@@ -138,7 +142,7 @@ app.post('/publicar', (req, res, next) => {
     lista.push(nueva);
     guardarPublicaciones(lista);
 
-    res.redirect('/?ok=1');
+    res.redirect('/hoy?ok=1');
   });
 });
 

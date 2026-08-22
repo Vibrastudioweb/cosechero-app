@@ -274,3 +274,106 @@ input[type="file"] {
   color: #fff;
   border-color: var(--naranja);
 }
+
+/* Bienvenida */
+
+.bienvenida-body {
+  min-height: 100vh;
+}
+
+.bienvenida {
+  min-height: 100vh;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bienvenida-blob {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 186, 8, 0.35) 0%, rgba(232, 93, 4, 0.12) 55%, rgba(255, 186, 8, 0) 75%);
+  z-index: 0;
+}
+
+.bienvenida-logo {
+  position: relative;
+  z-index: 1;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 10px 20px rgba(232, 93, 4, 0.25));
+}
+
+.bienvenida h1 {
+  position: relative;
+  z-index: 1;
+  font-size: 42px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--naranja);
+}
+
+.bienvenida .tagline-grande {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--verde);
+  margin: 6px 0 22px;
+}
+
+.bienvenida .mensaje {
+  position: relative;
+  z-index: 1;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--texto);
+  max-width: 300px;
+  margin: 0 0 34px;
+}
+
+.btn-entrar {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  background: var(--naranja);
+  color: #fff;
+  text-decoration: none;
+  padding: 16px 34px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 17px;
+  box-shadow: 0 10px 24px rgba(232, 93, 4, 0.35);
+  margin-bottom: 20px;
+}
+
+.btn-entrar:active {
+  opacity: 0.9;
+}
+
+.link-publicar {
+  position: relative;
+  z-index: 1;
+  color: var(--verde);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.link-publicar:hover {
+  text-decoration: underline;
+}
