@@ -178,19 +178,51 @@ function normalizarTelefonoWhatsapp(telefono) {
   return digitos;
 }
 
-// Mientras la app no este lanzada, la raiz muestra la pantalla "Proximamente".
+// Mientras la app no este lanzada, la raiz muestra la pantalla "Proximamente"
+// y el resto de la app queda protegido por una clave (solo el equipo entra).
 // Para activar la app en produccion: define la variable de entorno APP_LANZADA=1
 const APP_LANZADA = process.env.APP_LANZADA === '1';
+// Clave para entrar a construir. Cambiala definiendo ACCESO_CLAVE en el hosting.
+const ACCESO_CLAVE = process.env.ACCESO_CLAVE || 'cosechero-2026';
+const COOKIE_ACCESO = 'cosechero_acceso';
+
+// Deja pasar si la app ya esta lanzada o si el visitante tiene el acceso privado.
+function requiereAcceso(req, res, next) {
+  if (APP_LANZADA) return next();
+  if (req.signedCookies[COOKIE_ACCESO] === 'ok') return next();
+  return res.redirect('/');
+}
 
 app.get('/', (req, res) => {
   res.render(APP_LANZADA ? 'bienvenida' : 'proximamente');
 });
 
-app.get('/bienvenida', (req, res) => {
+app.get('/acceso', (req, res) => {
+  if (APP_LANZADA || req.signedCookies[COOKIE_ACCESO] === 'ok') {
+    return res.redirect('/bienvenida');
+  }
+  res.render('acceso', { error: null });
+});
+
+app.post('/acceso', (req, res) => {
+  const { clave } = req.body;
+  if (!clave || clave !== ACCESO_CLAVE) {
+    return res.status(401).render('acceso', { error: 'Clave incorrecta.' });
+  }
+  res.cookie(COOKIE_ACCESO, 'ok', {
+    signed: true,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+  res.redirect('/bienvenida');
+});
+
+app.get('/bienvenida', requiereAcceso, (req, res) => {
   res.render('bienvenida');
 });
 
-app.get('/entrar', (req, res) => {
+app.get('/entrar', requiereAcceso, (req, res) => {
   const rol = req.query.rol;
   if (rol !== 'comprador' && rol !== 'productor') {
     return res.redirect('/');
@@ -202,7 +234,7 @@ app.get('/entrar', (req, res) => {
   });
 });
 
-app.post('/entrar', (req, res) => {
+app.post('/entrar', requiereAcceso, (req, res) => {
   const { rol, telefono } = req.body;
   if (rol !== 'comprador' && rol !== 'productor') {
     return res.redirect('/');
@@ -222,7 +254,7 @@ app.post('/entrar', (req, res) => {
   res.redirect(rol === 'productor' ? '/publicar' : '/hoy');
 });
 
-app.get('/hoy', (req, res) => {
+app.get('/hoy', requiereAcceso, (req, res) => {
   const todas = leerPublicaciones().filter((p) => p.mercado_id === MERCADO_ID);
   const deHoy = todas
     .filter((p) => esDeHoy(p.fecha_publicacion))
@@ -241,7 +273,7 @@ app.get('/hoy', (req, res) => {
   });
 });
 
-app.get('/publicar', (req, res) => {
+app.get('/publicar', requiereAcceso, (req, res) => {
   res.render('publicar', {
     error: null,
     estados: ESTADOS_DISPONIBLES,
@@ -249,7 +281,7 @@ app.get('/publicar', (req, res) => {
   });
 });
 
-app.post('/publicar', (req, res, next) => {
+app.post('/publicar', requiereAcceso, (req, res, next) => {
   upload.single('foto')(req, res, (err) => {
     if (err) {
       return res.status(400).render('publicar', { error: err.message, estados: ESTADOS_DISPONIBLES, valores: req.body });

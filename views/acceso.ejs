@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Cosechero — Acceso</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bienvenida-body">
+  <main class="bienvenida">
+    <div class="bienvenida-logo" style="width:84px;height:84px;">
+      <img src="/img/cosechero-mark.png" alt="Cosechero">
+    </div>
+
+    <p class="rol-badge">Acceso privado</p>
+    <h1 class="entrar-titulo">Área de construcción</h1>
+    <p class="mensaje">Introduce la clave para entrar mientras seguimos construyendo Cosechero.</p>
+
+    <% if (error) { %>
+      <div class="error" style="margin-bottom:16px;position:relative;z-index:1;"><%= error %></div>
+    <% } %>
+
+    <form action="/acceso" method="POST" class="form-entrar">
+      <input type="password" name="clave" placeholder="Clave de acceso" required autofocus>
+      <button type="submit" class="btn-entrar">Entrar</button>
+    </form>
+  </main>
+</body>
+</html>
