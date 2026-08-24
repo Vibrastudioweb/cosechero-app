@@ -178,7 +178,15 @@ function normalizarTelefonoWhatsapp(telefono) {
   return digitos;
 }
 
+// Mientras la app no este lanzada, la raiz muestra la pantalla "Proximamente".
+// Para activar la app en produccion: define la variable de entorno APP_LANZADA=1
+const APP_LANZADA = process.env.APP_LANZADA === '1';
+
 app.get('/', (req, res) => {
+  res.render(APP_LANZADA ? 'bienvenida' : 'proximamente');
+});
+
+app.get('/bienvenida', (req, res) => {
   res.render('bienvenida');
 });
 
